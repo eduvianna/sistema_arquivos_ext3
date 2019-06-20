@@ -81,6 +81,16 @@ void inicializaArquivo(char *buffer, char *tamBloco, char *qtdBloco, char *qtdIn
             criaNodo(&fp, &node[i], 0, 0, "", 0, 0, 0, 0, 0);
         }
     }
+
+    //Inicializa indice do inode (dir / indice = 0)
+    fwrite(&init, sizeof(char), 1, fp);
+
+    //Inicializa vetor de blocos
+    // for (i = 0; i < tamVetorBlocos; i++)
+    //{
+    //fwrite(&init, sizeof(char), 1, fp);
+    //}
+
     //Fecha Arquivo
     fclose(fp);
 }
