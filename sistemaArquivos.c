@@ -1,5 +1,4 @@
 #include "sistemaArquivos.h"
-#include "inode.h"
 
 /* void criaSistemaArquivos()
 {
@@ -71,24 +70,46 @@ void inicializaArquivo(char *buffer, char *tamBloco, char *qtdBloco, char *qtdIn
     //Inicializa vetor de inodes
     INODE node[i_qtdInode];
 
-    node[0].IS_USED = 1;
-    node[0].IS_DIR = 1;
-    bzero(node[0].NAME, sizeof(char[10]));
-    strcpy(node[0].NAME, "/");
-
-    node[0].SIZE = 0;
-    node[0].DIRECT_BLOCKS[0] = 0;
-    node[0].DIRECT_BLOCKS[1] = 0;
-    node[0].DIRECT_BLOCKS[2] = 0;
-    node[0].DIRECT_BLOCKS[3] = 0;
-
     for (i = 0; i < i_qtdInode; i++)
     {
-
-        fwrite(&node[i], 1, sizeof(INODE) * i_qtdInode, fp);
+        if (i == 0)
+        {
+            criaNodo(&fp, &node[i], 1, 1, "/", 0, 0, 0, 0, 0);
+        }
+        else
+        {
+            criaNodo(&fp, &node[i], 0, 0, "", 0, 0, 0, 0, 0);
+        }
     }
     //Fecha Arquivo
     fclose(fp);
+}
+
+void criaNodo(FILE **fp, INODE *node, int isUsed, int isDir, char *name, int size, int directBlock0, int directBlock1, int directBlock2, int directBlock3)
+{
+    bzero(node->NAME, sizeof(char[10]));
+    node->IS_USED = isUsed;
+    node->IS_DIR = isDir;
+    strcpy(node->NAME, name);
+    node->SIZE = size;
+    node->DIRECT_BLOCKS[0] = directBlock0;
+    node->DIRECT_BLOCKS[1] = directBlock1;
+    node->DIRECT_BLOCKS[2] = directBlock2;
+    node->DIRECT_BLOCKS[3] = directBlock3;
+    fwrite(node, sizeof(node), 1, *fp);
+}
+
+void editaNodo(FILE **fp, INODE *node, int isUsed, int isDir, char *name, int size, int directBlock0, int directBlock1, int directBlock2, int directBlock3)
+{
+    node->IS_USED = isUsed;
+    node->IS_DIR = isDir;
+    strcpy(node->NAME, name);
+    node->SIZE = size;
+    node->DIRECT_BLOCKS[0] = directBlock0;
+    node->DIRECT_BLOCKS[1] = directBlock1;
+    node->DIRECT_BLOCKS[2] = directBlock2;
+    node->DIRECT_BLOCKS[3] = directBlock3;
+    fwrite(node, sizeof(node), 1, *fp);
 }
 
 /*void criaDiretorioRaiz()
@@ -98,13 +119,13 @@ void inicializaArquivo(char *buffer, char *tamBloco, char *qtdBloco, char *qtdIn
 }
 
 void criaNodoVazio(FILE *arq){
-    //    INODE nodo;
-    //  nodo.IS_USED = 0;
-    //nodo.IS_DIR = 0;
-    //strcpy(nodo.NAME, "new");
-    //nodo.SIZE = 0;
-    //nodo.DIRECT_BLOCKS;
-    //nodo.INDIRECT_BLOCKS;
-    //nodo.DOUBLE_INDIRECT_BLOCKS;
-    //fwrite(&nodo, sizeof(nodo), 1, arq);
+    INODE nodo;
+    nodo.IS_USED = 0;
+    nodo.IS_DIR = 0;
+    strcpy(nodo.NAME, "new");
+    nodo.SIZE = 0;
+    nodo.DIRECT_BLOCKS;
+    nodo.INDIRECT_BLOCKS;
+    nodo.DOUBLE_INDIRECT_BLOCKS;
+    fwrite(&nodo, sizeof(nodo), 1, arq);
 };*/
