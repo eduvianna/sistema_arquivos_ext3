@@ -47,6 +47,7 @@ void inicializaArquivo(char *buffer, char *tamBloco, char *qtdBloco, char *qtdIn
     int init = 0;
     tamMapaBits = (int)ceil(i_qtdBloco / 8.0);
     tamVetorBlocos = i_tamBloco * i_qtdBloco;
+
     //Inicializa o arquivo
     fwrite(&i_tamBloco, sizeof(char), 1, fp);
     fwrite(&i_qtdBloco, sizeof(char), 1, fp);
@@ -69,6 +70,7 @@ void inicializaArquivo(char *buffer, char *tamBloco, char *qtdBloco, char *qtdIn
 
     //Inicializa vetor de inodes
     INODE node[i_qtdInode];
+    int j;
 
     for (i = 0; i < i_qtdInode; i++)
     {
@@ -86,10 +88,11 @@ void inicializaArquivo(char *buffer, char *tamBloco, char *qtdBloco, char *qtdIn
     fwrite(&init, sizeof(char), 1, fp);
 
     //Inicializa vetor de blocos
-    // for (i = 0; i < tamVetorBlocos; i++)
-    //{
-    //fwrite(&init, sizeof(char), 1, fp);
-    //}
+
+    for (j = 0; j < tamVetorBlocos; j++)
+    {
+        fwrite(&init, sizeof(char), 1, fp);
+    }
 
     //Fecha Arquivo
     fclose(fp);
@@ -106,11 +109,20 @@ void criaNodo(FILE **fp, INODE *node, int isUsed, int isDir, char *name, int siz
     node->DIRECT_BLOCKS[1] = directBlock1;
     node->DIRECT_BLOCKS[2] = directBlock2;
     node->DIRECT_BLOCKS[3] = directBlock3;
-    fwrite(node, sizeof(node), 1, *fp);
+    node->INDIRECT_BLOCKS[0] = 0;
+    node->INDIRECT_BLOCKS[1] = 0;
+    node->INDIRECT_BLOCKS[2] = 0;
+    node->INDIRECT_BLOCKS[3] = 0;
+    node->DOUBLE_INDIRECT_BLOCKS[0] = 0;
+    node->DOUBLE_INDIRECT_BLOCKS[1] = 0;
+    node->DOUBLE_INDIRECT_BLOCKS[2] = 0;
+    node->DOUBLE_INDIRECT_BLOCKS[3] = 0;
+    fwrite(node, sizeof(INODE), 1, *fp);
 }
 
 void editaNodo(FILE **fp, INODE *node, int isUsed, int isDir, char *name, int size, int directBlock0, int directBlock1, int directBlock2, int directBlock3)
 {
+    bzero(node->NAME, sizeof(char[10]));
     node->IS_USED = isUsed;
     node->IS_DIR = isDir;
     strcpy(node->NAME, name);
