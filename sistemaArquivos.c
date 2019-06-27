@@ -1,16 +1,8 @@
 #include "sistemaArquivos.h"
 
-/* void criaSistemaArquivos()
+void inicializaArquivo(char *buffer)
 {
-    //arq = fopen('fs.bin', "wb+");
-
-    //inicializaArquivo(arq);
-    //criaDiretorioRaiz();
-//}*/
-
-void inicializaArquivo(char *buffer, char *tamBloco, char *qtdBloco, char *qtdInode)
-{
-    char *aux;
+    char *aux, tamBloco[5], qtdBloco[5], qtdInode[5];
     FILE *fp;
     int i = 0, tamMapaBits, tamVetorBlocos;
 
@@ -76,11 +68,11 @@ void inicializaArquivo(char *buffer, char *tamBloco, char *qtdBloco, char *qtdIn
     {
         if (i == 0)
         {
-            criaNodo(&fp, &node[i], 1, 1, "/", 0, 0, 0, 0, 0);
+            criaNodo(&fp, &node[i], 1, 1, "/", 0, 0, 0, 0);
         }
         else
         {
-            criaNodo(&fp, &node[i], 0, 0, "", 0, 0, 0, 0, 0);
+            criaNodo(&fp, &node[i], 0, 0, "", 0, 0, 0, 0);
         }
     }
 
@@ -98,7 +90,52 @@ void inicializaArquivo(char *buffer, char *tamBloco, char *qtdBloco, char *qtdIn
     fclose(fp);
 }
 
-void criaNodo(FILE **fp, INODE *node, int isUsed, int isDir, char *name, int size, int directBlock0, int directBlock1, int directBlock2, int directBlock3)
+// Função que adicionar arquivo
+void adicionaArquivo(char *buffer)
+{
+    char *aux, *aux2, fileName[10], content[10];
+    char *saveptr1, *saveptr2;
+    unsigned char bufferFile[255];
+    FILE *fp;
+    INODE node;
+    int i = 0, sizeFile;
+
+    aux = strtok_r(buffer, " ", &saveptr1);
+    while (aux != NULL)
+    {
+
+        aux = strtok_r(NULL, " ", &saveptr1);
+        if (i == 0)
+        {
+            fp = fopen(aux, "ab+");
+            sizeFile = fread(bufferFile, sizeof(unsigned char), 255, fp);
+        }
+
+        if (i == 1)
+        {
+            aux2 = strtok_r(aux, "/", &saveptr2);
+            strcpy(fileName, aux2);
+        }
+
+        if (i == 2)
+        {
+            strcpy(content, aux);
+            criaNodo(&fp, &node, 1, 0, fileName, 0, 0, 0, 0);
+        }
+
+        i++;
+    }
+
+    for (i = 2; i < (sizeFile / sizeof(unsigned char)); i++)
+    {
+        printf("%x ", bufferFile[i]);
+    }
+
+    fclose(fp);
+}
+
+// Função que cria ou edita nodos
+void criaNodo(FILE **fp, INODE *node, int isUsed, int isDir, char *name, int size, int directBlock0, int directBlock1, int directBlock2)
 {
     bzero(node->NAME, sizeof(char[10]));
     node->IS_USED = isUsed;
@@ -108,46 +145,11 @@ void criaNodo(FILE **fp, INODE *node, int isUsed, int isDir, char *name, int siz
     node->DIRECT_BLOCKS[0] = directBlock0;
     node->DIRECT_BLOCKS[1] = directBlock1;
     node->DIRECT_BLOCKS[2] = directBlock2;
-    node->DIRECT_BLOCKS[3] = directBlock3;
     node->INDIRECT_BLOCKS[0] = 0;
     node->INDIRECT_BLOCKS[1] = 0;
     node->INDIRECT_BLOCKS[2] = 0;
-    node->INDIRECT_BLOCKS[3] = 0;
     node->DOUBLE_INDIRECT_BLOCKS[0] = 0;
     node->DOUBLE_INDIRECT_BLOCKS[1] = 0;
     node->DOUBLE_INDIRECT_BLOCKS[2] = 0;
-    node->DOUBLE_INDIRECT_BLOCKS[3] = 0;
     fwrite(node, sizeof(INODE), 1, *fp);
 }
-
-void editaNodo(FILE **fp, INODE *node, int isUsed, int isDir, char *name, int size, int directBlock0, int directBlock1, int directBlock2, int directBlock3)
-{
-    bzero(node->NAME, sizeof(char[10]));
-    node->IS_USED = isUsed;
-    node->IS_DIR = isDir;
-    strcpy(node->NAME, name);
-    node->SIZE = size;
-    node->DIRECT_BLOCKS[0] = directBlock0;
-    node->DIRECT_BLOCKS[1] = directBlock1;
-    node->DIRECT_BLOCKS[2] = directBlock2;
-    node->DIRECT_BLOCKS[3] = directBlock3;
-    fwrite(node, sizeof(node), 1, *fp);
-}
-
-/*void criaDiretorioRaiz()
-{
-    //fclose(arq);
-    //arq = fopen('fs.bin', "wb+");
-}
-
-void criaNodoVazio(FILE *arq){
-    INODE nodo;
-    nodo.IS_USED = 0;
-    nodo.IS_DIR = 0;
-    strcpy(nodo.NAME, "new");
-    nodo.SIZE = 0;
-    nodo.DIRECT_BLOCKS;
-    nodo.INDIRECT_BLOCKS;
-    nodo.DOUBLE_INDIRECT_BLOCKS;
-    fwrite(&nodo, sizeof(nodo), 1, arq);
-};*/
