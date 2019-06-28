@@ -22,4 +22,6 @@ void inicializaArquivo(char *buffer);
 void adicionaArquivo(char *buffer);
 void adicionaDiretorio(char *buffer);
 
+unsigned int *int_to_bin(unsigned int k);
+int bin_to_int(unsigned int binArray[]);
 void criaNodo(FILE **fp, INODE *node, int isUsed, int isDir, char *name, int size, int directBlock0, int directBlock1, int directBlock2);

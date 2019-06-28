@@ -1,5 +1,5 @@
-#include "sistemaArquivos.h"
-
+#include "sistemaArquivos.c"
+//#include "sha256.c"
 /*
 Teste 1
 Comando : init fs2-10-5.bin 2 10 5
@@ -47,6 +47,7 @@ int main(int argc, int argv[])
     // Adiciona um diretório
     else if (strncmp(buffer, "addDir", 6) == 0)
     {
+        //printSha256("fs.bin");
         //adicionaDiretorio(buffer);
     }
 }
