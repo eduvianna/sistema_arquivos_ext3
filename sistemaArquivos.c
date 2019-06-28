@@ -93,12 +93,12 @@ void inicializaArquivo(char *buffer)
 // Função que adicionar arquivo
 void adicionaArquivo(char *buffer)
 {
-    char *aux, *aux2, fileName[10], content[10];
-    char *saveptr1, *saveptr2;
+    char fileNameAux[100], fileName[10], content[10], dir[10];
+    char *aux, *aux2, *saveptr1, *saveptr2;
     unsigned char bufferFile[255];
     FILE *fp;
     INODE node;
-    int i = 0, sizeFile;
+    int i = 0, j, bar = 0, sizeFile;
     unsigned char vectorInitFile[3];
     aux = strtok_r(buffer, " ", &saveptr1);
     while (aux != NULL)
@@ -113,8 +113,39 @@ void adicionaArquivo(char *buffer)
 
         if (i == 1)
         {
-            aux2 = strtok_r(aux, "/", &saveptr2);
-            strcpy(fileName, aux2);
+            strcpy(fileNameAux, aux);
+            while (fileNameAux[j] != ' ')
+            {
+                if (fileNameAux[j] == '/')
+                {
+                    bar++;
+                }
+                j++;
+            }
+            if (bar == 1)
+            {
+                aux2 = strtok_r(aux, "/", &saveptr2);
+                strcpy(dir, "/");
+                strcpy(fileName, aux2);
+            }
+            else
+            {
+                aux2 = strtok_r(aux, "/", &saveptr2);
+                strcpy(dir, "/");
+                j = 0;
+                while (aux2 != NULL)
+                {
+                    if (j < bar)
+                    {
+                        //adicionadir(dir);
+                    }
+                    else
+                    {
+                        strcpy(fileName, aux2);
+                    }
+                    j++;
+                }
+            }
         }
 
         if (i == 2)
@@ -136,7 +167,7 @@ void adicionaArquivo(char *buffer)
     fread(mapaBits, sizeof(unsigned char), 1, fp);
 
     unsigned int *p;
-    int j, pChar, l = 0;
+    int pChar, l = 0;
     long int pos;
     fseek(fp, 3, SEEK_SET);
     int liberado = 1;
@@ -175,7 +206,7 @@ void adicionaArquivo(char *buffer)
 
     if (liberado == 0)
     {
-        unsigned char isUsed[2], sizeDir[2], blocoFree[2];
+        unsigned char isUsed[2], sizeDir[2], blocoFree[2], isDir[2], dirCheck[10], dirAux[2];
         int iSizeDir;
 
         // Atualizar Inodes
@@ -190,13 +221,39 @@ void adicionaArquivo(char *buffer)
                 iSizeDir = strlen(content) - 1;
                 criaNodo(&fp, &node, 1, 0, fileName, iSizeDir, posMapaBits[0], posMapaBits[1], posMapaBits[2]);
                 fseek(fp, 15 + tamMapaBits, SEEK_SET);
-                fread(sizeDir, sizeof(unsigned char), 1, fp);
-                iSizeDir = (int)*sizeDir + 1;
-                fseek(fp, 3 + tamMapaBits, SEEK_SET);
-                criaNodo(&fp, &node, 1, 1, "/", iSizeDir, 0, 0, 0);
-                l = 0;
+
+                //Alterar Tamanho do inode pai
+                fseek(fp, 4 + tamMapaBits, SEEK_SET);
+                for (j = 0; j < (int)vectorInitFile[2]; j++)
+                {
+                    pos = ftell(fp);
+                    fread(isDir, sizeof(unsigned char), 1, fp);
+                    if ((int)*isDir == 1)
+                    {
+                        k = 0;
+                        do
+                        {
+                            fread(dirAux, sizeof(unsigned char), 1, fp);
+                            strcat(dirCheck, dirAux);
+                            k++;
+                        } while (*dirAux != 0);
+
+                        if (strcmp(dir, dirCheck) == 0)
+                        {
+                            fseek(fp, pos + 10, SEEK_CUR);
+
+                            pos = ftell(fp);
+                            fread(sizeDir, sizeof(unsigned char), 1, fp);
+                            iSizeDir = (int)*sizeDir + 1;
+                            fseek(fp, pos, SEEK_SET);
+                            fwrite(&iSizeDir, sizeof(char), 1, fp);
+                            break;
+                        }
+                    }
+                }
 
                 // Adicionar Content no vetor de blocos
+                l = 0;
                 for (j = 0; j < 3; j++)
                 {
                     fseek(fp, -((int)vectorInitFile[0] * (int)vectorInitFile[1]) + posMapaBits[j] * 2, SEEK_END);
@@ -225,13 +282,6 @@ void adicionaArquivo(char *buffer)
                 fseek(fp, 3 + tamMapaBits + (22 * i), SEEK_SET);
             }
         }
-
-        /*// Adicionar Content
-        fseek(fp, 2 + vectorInitFile[0] + tamMapaBits + (22 * (int)vectorInitFile[2]), SEEK_SET);
-        for (i = 0; i < (int)vectorInitFile[0] * (int)vectorInitFile[1]; i++)
-        {
-            fread(blocoFree, sizeof(unsigned char), 1, fp);
-        }*/
     }
 
     fclose(fp);
