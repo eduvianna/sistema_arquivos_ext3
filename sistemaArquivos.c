@@ -136,7 +136,7 @@ void adicionaArquivo(char *buffer)
     fread(mapaBits, sizeof(unsigned char), 1, fp);
 
     unsigned int *p;
-    int j, pChar, l;
+    int j, pChar, l = 0;
     long int pos;
     fseek(fp, 3, SEEK_SET);
     int liberado = 1;
@@ -182,26 +182,47 @@ void adicionaArquivo(char *buffer)
         fseek(fp, 3 + tamMapaBits, SEEK_SET);
         for (i = 0; i < (int)vectorInitFile[2]; i++)
         {
+            pos = ftell(fp);
             fread(isUsed, sizeof(unsigned char), 1, fp);
             if (*isUsed == 0)
             {
+                fseek(fp, pos, SEEK_SET);
                 iSizeDir = strlen(content) - 1;
                 criaNodo(&fp, &node, 1, 0, fileName, iSizeDir, posMapaBits[0], posMapaBits[1], posMapaBits[2]);
                 fseek(fp, 15 + tamMapaBits, SEEK_SET);
                 fread(sizeDir, sizeof(unsigned char), 1, fp);
-                iSizeDir = *sizeDir + 1;
+                iSizeDir = (int)*sizeDir + 1;
                 fseek(fp, 3 + tamMapaBits, SEEK_SET);
                 criaNodo(&fp, &node, 1, 1, "/", iSizeDir, 0, 0, 0);
-                for (j = 0; j < strlen(content); j++)
+                l = 0;
+
+                // Adicionar Content no vetor de blocos
+                for (j = 0; j < 3; j++)
                 {
-                    fseek(fp, 3 + tamMapaBits + (22 * (int)vectorInitFile[2]) + posMapaBits[j], SEEK_SET);
-                    fwrite(&vectorInitFile[j], sizeof(char), 1, fp);
+                    fseek(fp, -((int)vectorInitFile[0] * (int)vectorInitFile[1]) + posMapaBits[j] * 2, SEEK_END);
+
+                    for (k = 0; k < (int)vectorInitFile[0]; k++)
+                    {
+                        pos = ftell(fp);
+                        fread(blocoFree, sizeof(unsigned char), 1, fp);
+                        if ((int)*blocoFree == 0 && (l < strlen(content) - 1))
+                        {
+                            fseek(fp, pos, SEEK_SET);
+                            fwrite(&content[l], sizeof(char), 1, fp);
+                            l++;
+                        }
+                    }
+                    if (l >= strlen(content) - 1)
+                    {
+                        break;
+                    }
                 }
+
                 break;
             }
             else
             {
-                fseek(fp, 20, SEEK_CUR);
+                fseek(fp, 3 + tamMapaBits + (22 * i), SEEK_SET);
             }
         }
 
